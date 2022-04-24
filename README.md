@@ -1,8 +1,10 @@
-# js-kata-starter
+# Reverse Polish Notation
 
-Starter project for kata (Node, TypeScript, Jest)
+[Cf. Wikipedia](https://en.wikipedia.org/wiki/Reverse_Polish_notation)
 
 ## Getting started
+
+Starter project for kata (Node, TypeScript, Jest)
 
 - **Fork**, then clone the repository
 - Install dependencies
