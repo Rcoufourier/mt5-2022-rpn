@@ -2,8 +2,10 @@
 import * as matchers from "jest-extended";
 expect.extend(matchers);
 
-type Operators = "+" | "-" | "*" | "/" | "NEGATE";
+type BinaireOperators = "+" | "-" | "*" | "/" ;
+type UnaireOperator = "NEGATE";
 type Operand = number;
+type CalculElement =  BinaireOperators | UnaireOperator | Operand
 
 const rpn = (n1: number, n2: number, op: string):number => {
   switch (op) {
@@ -17,31 +19,42 @@ const rpn = (n1: number, n2: number, op: string):number => {
       return n1 + n2;
   }
 }
- const rpnNested = (rpnCalcul: (Operators | Operand)[]): number => {
-   const calculResult = rpnCalcul.reduce(rpnCalculReducer, [])
-   return calculResult[0];
- }
+const rpnNested = (rpnCalcul: CalculElement[]): number => {
+ const calculResult = rpnCalcul.reduce(rpnCalculReducer, [])
+ return calculResult[0];
+}
 
-const isOperator = (calculElement: Operators | Operand):calculElement is Operators => {
-  return  calculElement === "+" ||  calculElement === "-" ||  calculElement === "*" ||  calculElement === "/" ||  calculElement === "NEGATE";
+const isBinaireOperator = (calculElement: CalculElement):calculElement is BinaireOperators => {
+  return  calculElement === "+" ||  calculElement === "-" ||  calculElement === "*" ||  calculElement === "/";
+}
+
+const isNegateOperator = (calculElement: CalculElement):calculElement is UnaireOperator => {
+  return  calculElement === "NEGATE";
 }
 
 const rpnCalculReducer =
-  (stack: number[], cur: Operators | Operand) => {
-    if (isOperator(cur) && 'NEGATE' !== cur){
-      const operationResult = rpn(stack[stack.length-2], stack[stack.length-1], cur)
-      for (let i=0; i<2; i++){
-        stack.pop()
-      }
-      stack.push(operationResult)
+  (stack: number[], cur: CalculElement) => {
+  let updatedStack = stack
+    if (isBinaireOperator(cur)){
+      return doBinaireOperation(updatedStack)(cur);
     }
-    else if(isOperator(cur)) {
-       stack[stack.length-1] = stack[stack.length-1] * -1
+    if(isNegateOperator(cur)) {
+      return doNegateOperation(updatedStack)
     }
-    else {
-      stack.push(cur)
-    }
-    return stack
+    updatedStack.push(cur)
+    return updatedStack
+  }
+
+  const doBinaireOperation = (currentStack: number[]) => (operation: BinaireOperators) => {
+    const operationResult = rpn(currentStack[currentStack.length-2], currentStack[currentStack.length-1], operation)
+    currentStack.pop()
+    currentStack[currentStack.length-1] = operationResult
+    return currentStack
+  }
+
+  const doNegateOperation = (currentStack: number[]) => {
+    currentStack[currentStack.length-1] = currentStack[currentStack.length-1] * -1
+    return currentStack
   }
 
 it("rpn 1 + 1", function () {
@@ -84,12 +97,12 @@ it("rpn 2 NEGATE", function () {
   expect(actual).toEqual(-2);
 });
 
-it("rpn 2 NEGATE", function () {
+it("rpn NEGATE (3 + 2)", function () {
   const actual = rpnNested( [3, 2,"+", "NEGATE"])
   expect(actual).toEqual(-5);
 });
 
-it("rpn 2 NEGATE", function () {
+it("rpn 3 + -2", function () {
   const actual = rpnNested( [3, 2, "NEGATE", "+"])
   expect(actual).toEqual(1);
 });
