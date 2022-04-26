@@ -2,7 +2,7 @@
 import * as matchers from "jest-extended";
 expect.extend(matchers);
 
-type Operators = "+" | "-" | "*" | "/";
+type Operators = "+" | "-" | "*" | "/" | "NEGATE";
 type Operand = number;
 
 const rpn = (n1: number, n2: number, op: string):number => {
@@ -23,17 +23,20 @@ const rpn = (n1: number, n2: number, op: string):number => {
  }
 
 const isOperator = (calculElement: Operators | Operand):calculElement is Operators => {
-  return  calculElement === "+" ||  calculElement === "-" ||  calculElement === "*" ||  calculElement === "/";
+  return  calculElement === "+" ||  calculElement === "-" ||  calculElement === "*" ||  calculElement === "/" ||  calculElement === "NEGATE";
 }
 
 const rpnCalculReducer =
   (stack: number[], cur: Operators | Operand) => {
-    if (isOperator(cur)){
+    if (isOperator(cur) && 'NEGATE' !== cur){
       const operationResult = rpn(stack[stack.length-2], stack[stack.length-1], cur)
       for (let i=0; i<2; i++){
         stack.pop()
       }
       stack.push(operationResult)
+    }
+    else if(isOperator(cur)) {
+       stack[stack.length-1] = stack[stack.length-1] * -1
     }
     else {
       stack.push(cur)
@@ -74,4 +77,19 @@ it("rpn 1 + 3 - 2", function () {
 it("rpn 1 + 3 - 2", function () {
   const actual = rpnNested( [100, 10, 1, "+", "+"])
   expect(actual).toEqual(111);
+});
+
+it("rpn 2 NEGATE", function () {
+  const actual = rpnNested( [2, "NEGATE"])
+  expect(actual).toEqual(-2);
+});
+
+it("rpn 2 NEGATE", function () {
+  const actual = rpnNested( [3, 2,"+", "NEGATE"])
+  expect(actual).toEqual(-5);
+});
+
+it("rpn 2 NEGATE", function () {
+  const actual = rpnNested( [3, 2, "NEGATE", "+"])
+  expect(actual).toEqual(1);
 });
